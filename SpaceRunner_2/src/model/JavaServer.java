@@ -16,9 +16,9 @@ import java.util.List;
 
 public class JavaServer extends Thread {
     public static String params[];
-    public static char dir;
-    public static boolean input=false;
-    public static int done=0;
+    public char dir;
+    public boolean input=false;
+    public int done=0;
 
     public static Double toClient;
     public static List<Double> state;
@@ -47,8 +47,9 @@ public class JavaServer extends Thread {
 
         ServerSocket server = new ServerSocket(8080);
         System.out.println("wait for connection on port 8080");
-
+        int i=0;
         while(true) {
+
 
          client = server.accept();
 
@@ -58,42 +59,53 @@ public class JavaServer extends Thread {
 
 
             fromClient = in.readLine();
-           // System.out.println("received: " + fromClient);
+            System.out.println("received: " + fromClient);
 
-            if(fromClient.charAt(0)=='l'){
+            if(fromClient.charAt(0)=='l'  ){
+             //   while(input==true);
                 input=true;
                 dir='l';
 
                 sendData();
-                input=false;
+
 
             }
-            else if(fromClient.charAt(0)=='r')
+            else if(fromClient.charAt(0)=='r' )
             {
+               // while(input==true);
                 input=true;
                 dir='r';
                 sendData();
-                input=false;
-            }else if(fromClient.charAt(0)=='x')
+
+            }else if(fromClient.charAt(0)=='x' )
             {
+             //   while(input==true);
+
                 input=true;
                 dir='x';
-                sendData();
-                input=false;
-            }else if(fromClient.charAt(0)=='w')
+               // sendData();
+
+
+            }else if(fromClient.charAt(0)=='w' )
             {
+              //  while(input==true);
                 input=true;
-                dir='w';
+
                 print("sening reward = "+ reward);
                 sendInfo(String.valueOf(reward));
                 input=false;
-            }else if(fromClient.charAt(0)=='d')
+
+            }else if(fromClient.charAt(0)=='d' && input==false )
             {
+             //   while(input==true);
                 input=true;
                 dir='d';
-                sendInfo(String.valueOf(done));
-                if(done==1)done=0;
-                input=false;
+                print("sending done "+ done);
+                if(dir=='x')
+                 sendInfo(String.valueOf(0));
+                else sendInfo(String.valueOf(done));
+
+
             }else {
 
                 System.out.println("nista");
@@ -153,6 +165,7 @@ public class JavaServer extends Thread {
     public void sendInfo(String s){
 
         try{
+
             DataOutputStream dout=new DataOutputStream(client.getOutputStream());
             dout.writeUTF(s);
             dout.close();

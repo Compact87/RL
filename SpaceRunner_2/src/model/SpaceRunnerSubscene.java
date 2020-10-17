@@ -8,7 +8,7 @@ import javafx.util.Duration;
 
 public class SpaceRunnerSubscene extends SubScene {
   //  private final static String FONT_PATH="/kenvector_future_thin.ttf";
-    private final static String BACKGROUND_IMAGE="/yellow_panel.png";
+    private final static String BACKGROUND_IMAGE="/black_background.png";
     private  boolean isHidden=true;
     public SpaceRunnerSubscene() {
         super(new AnchorPane(),600,400);

@@ -41,7 +41,7 @@ public class GameViewManager {
     private DataOutputStream dos;
     private Socket socket;
 
-
+    boolean colision;
     private AnchorPane gamePane;
     private Scene gameScene;
     private Stage gameStage;
@@ -81,7 +81,7 @@ public class GameViewManager {
 
     private JavaServer js;
     private JavaClient jc;
-
+    public static volatile int lock;
     public static volatile WritableImage writableImage;
     public static Image placeholderImage;
 
@@ -94,6 +94,7 @@ public class GameViewManager {
         initializeListeners();
         randomPositionGenerator=new Random();
         imageReady=true;
+
     }
 
     private void initializeListeners() {
@@ -145,14 +146,21 @@ public class GameViewManager {
             int i=0;
             @Override
             public void handle(long l) {
-                if(JavaServer.dir!='s') {
 
-                    if(JavaServer.dir=='t'){
+                  //  print("direction = "+ js.dir +" input = " + js.input + " collision= "+colision);
+                    if(  colision ){
+                        print("Reseting after collision");
+
                         resetGame();
-                        JavaServer.dir='s';
-                        print("reset");
+                        colision=false;}
 
-                    }else {
+                    else if(js.dir=='x' && js.input==true){
+                        print("Reseting from after x command");
+
+                        resetGame();
+                        js.input=false;
+
+                    }else if(js.input==true) {
                     moveBackground();
                     moveShip();
                     moveGameElements();
@@ -160,9 +168,10 @@ public class GameViewManager {
                     checkIfElementsCollide();
                     checkElementsDistance();
                     takeSnapShot(gameScene, i);
-                    i++;
-                    JavaServer.dir='s';}
-                }
+
+
+                    }
+
 
             }
         };
@@ -188,33 +197,37 @@ public class GameViewManager {
 
 
     private void moveShip(){
+
         i++;
-        if(JavaServer.input && JavaServer.dir=='r'){/*JavaServer.input && JavaServer.dir=='r'*/
+        if(js.input && js.dir=='r'){/*JavaServer.input && JavaServer.dir=='r'*/
             if(angle <30){
                 angle +=5;
             }
             ship.setRotate(angle);
             if(ship.getLayoutX()<522){
-                ship.setLayoutX(ship.getLayoutX()+3);
+                ship.setLayoutX(ship.getLayoutX()+6);
                 JavaServer.toClient=ship.getLayoutX();
             }
-            JavaServer.input=false;
+            else colision=true;
+            js.input=false;
+            print("move right");
 
         }
-        if(JavaServer.input && JavaServer.dir=='l'){//JavaServer.input && JavaServer.dir=='l'
+        if(js.input && js.dir=='l'){//JavaServer.input && JavaServer.dir=='l'
             if(angle >-30){
                 angle -=5;
             }
             ship.setRotate(angle);
             if(ship.getLayoutX()>-20){
-                ship.setLayoutX(ship.getLayoutX()-3);
+                ship.setLayoutX(ship.getLayoutX()-6);
                 JavaServer.toClient=ship.getLayoutX();
-            }
-            JavaServer.input=false;
+            }else colision=true;
+            js.input=false;
+            print("move left");
 
         }
 
-        if(!JavaServer.input){
+        if(!js.input){
             if(angle<0){
                 angle +=5;
             }else if(angle>0){
@@ -222,6 +235,7 @@ public class GameViewManager {
             }
             ship.setRotate(angle);
         }
+        print("done moving ship");
     }
 
     private void createBackground(){
@@ -245,6 +259,7 @@ public class GameViewManager {
         gridPane2.setLayoutY(gridPane2.getLayoutY()+0.5);
         if(gridPane1.getLayoutY()>=1024)gridPane1.setLayoutY(-1024);
         if(gridPane2.getLayoutY()>=1024)gridPane2.setLayoutY(-1024);
+        print("done moving background");
     }
     private void createGameElements(SHIP chosenShip){
         playerLife=2;
@@ -266,13 +281,13 @@ public class GameViewManager {
 
 
 
-        brownMeteors=new ImageView[3];
+        brownMeteors=new ImageView[0];
         for(int i =0;i<brownMeteors.length;i++){
             brownMeteors[i]=new ImageView(METEOR_BROWN_IMAGE);
             setNewElementPosition(brownMeteors[i]);
             gamePane.getChildren().add(brownMeteors[i]);
         }
-        greyMeteors=new ImageView[3];
+        greyMeteors=new ImageView[6];
         for(int i =0;i<greyMeteors.length;i++){
            greyMeteors[i]=new ImageView(METEOR_GREY_IMAGE);
             setNewElementPosition(greyMeteors[i]);
@@ -280,8 +295,8 @@ public class GameViewManager {
         }
     }
     private void setNewElementPosition(ImageView image){
-        image.setLayoutX(randomPositionGenerator.nextInt(600));
-        image.setLayoutY(-(randomPositionGenerator.nextInt(370)+100));
+        image.setLayoutX(randomPositionGenerator.nextInt(600));//randomPositionGenerator.nextInt(600)    GAME_WIDTH-200
+        image.setLayoutY(GAME_HEIGHT-500);//-(randomPositionGenerator.nextInt(370)+100)
 
 
     }
@@ -319,7 +334,7 @@ public class GameViewManager {
 
     }
     private void checkIfElementsCollide(){
-        boolean colision=false;
+
         if((SHIP_RADIUS + STAR_RADIUS)>calculateDistance(ship.getLayoutX()+49, star.getLayoutX()+15, ship.getLayoutY()+37,star.getLayoutY()+15))
         {  setNewElementPosition(star);
 
@@ -353,14 +368,17 @@ public class GameViewManager {
             }
 
         }
-        if(colision==true){
+
+        if(colision==true ){
             JavaServer.reward=0;
-            resetGame();
+
+
+
         }else{
             JavaServer.reward=1;
 
         }
-
+        print("done checking collision ");
     }
     private void removeLife(){
         gamePane.getChildren().remove(playerLifes[playerLife]);
@@ -379,6 +397,7 @@ public class GameViewManager {
 
     }
     private void startComm(){
+
        js=new JavaServer(8080);
      //  jc=new JavaClient(8090);
         js.start();
@@ -406,7 +425,7 @@ public class GameViewManager {
 
         }*/
 
-
+        print("done taking snapshot ");
 
 
         }
@@ -424,8 +443,8 @@ public class GameViewManager {
             ship.setLayoutX(GAME_WIDTH-200);
             ship.setLayoutY(GAME_HEIGHT-90);
 
-            JavaServer.done=1;
-            print("reset");
+            js.done=1;
+            print("done reseting ");
 
         }
         public void print(String string){
